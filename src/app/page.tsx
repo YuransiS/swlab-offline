@@ -2,7 +2,7 @@ import { Header } from "@/components/sections/Header";
 import { Hero } from "@/components/sections/Hero";
 import { Niches } from "@/components/sections/Niches";
 import { Program } from "@/components/sections/Program";
-import { Speakers } from "@/components/sections/Speakers";
+import { LimitedSpots } from "@/components/sections/LimitedSpots";
 import { Location } from "@/components/sections/Location";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { Footer } from "@/components/sections/Footer";
@@ -15,7 +15,7 @@ export default function Home() {
       <Hero />
       <Niches />
       <Program />
-      <Speakers />
+      <LimitedSpots />
       <Location />
       <LeadForm />
       <Footer />
