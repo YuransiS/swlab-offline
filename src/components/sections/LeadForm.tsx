@@ -9,12 +9,33 @@ export function LeadForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  
+  // Form fields
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [utms, setUtms] = useState<Record<string, string>>({});
+
   const transition = { type: "spring" as const, stiffness: 100, damping: 20 };
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
     window.addEventListener('open-lead-form', handleOpen);
     return () => window.removeEventListener('open-lead-form', handleOpen);
+  }, []);
+
+  // Get UTMs from URL when component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const currentUtms: Record<string, string> = {};
+      const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+      
+      utmKeys.forEach(param => {
+        const value = searchParams.get(param);
+        if (value) currentUtms[param] = value;
+      });
+      setUtms(currentUtms);
+    }
   }, []);
 
   // Prevent scroll when modal is open
@@ -25,7 +46,11 @@ export function LeadForm() {
       document.body.style.overflow = "unset";
       // Reset success state after closing
       if (success) {
-        setTimeout(() => setSuccess(false), 500);
+        setTimeout(() => {
+          setSuccess(false);
+          setName("");
+          setPhone("");
+        }, 500);
       }
     }
     return () => {
@@ -34,10 +59,34 @@ export function LeadForm() {
   }, [isOpen, success]);
 
   const TELEGRAM_URL = "https://t.me/swlab_education_bot?start=69c0d8801ebc2a4a840b4da6";
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwKJpDiPJbNSrTjhNs_9P87efKICxu2hpSDKCH0NfhcPJ_R0efZqGooqrVVIPOz5QVOSg/exec";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Send data to Google Sheets via Apps Script Web App
+    try {
+      const formData = new FormData();
+      formData.append("sheetName", "offline"); // Specific for this site
+      formData.append("name", name);
+      formData.append("phone", "+48" + phone);
+      formData.append("page_url", window.location.href);
+      
+      // Append all UTM parameters
+      Object.entries(utms).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        body: formData,
+        mode: "no-cors", // Required to avoid CORS preflight errors with Google Scripts
+      });
+    } catch (error) {
+      console.error("Ошибка при отправке данных:", error);
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSuccess(true);
@@ -50,7 +99,7 @@ export function LeadForm() {
         window.location.href = TELEGRAM_URL;
       }, 1500);
       
-    }, 1500);
+    }, 500); // 500ms delay for UX since sending doesn't block fully
   };
 
   return (
@@ -97,6 +146,8 @@ export function LeadForm() {
                   <input
                     type="text"
                     required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="Имя"
                     className="w-full bg-white border border-gray-200 rounded-xl py-4 pl-12 pr-4 text-[var(--color-heading)] placeholder:text-gray-400 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-100 transition-all duration-300 shadow-sm"
                   />
@@ -112,6 +163,8 @@ export function LeadForm() {
                   <input
                     type="tel"
                     required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="Номер телефона"
                     className="w-full bg-white border border-gray-200 rounded-r-xl py-4 px-4 text-[var(--color-heading)] placeholder:text-gray-400 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-100 transition-all duration-300 border-l-0 shadow-sm"
                   />
