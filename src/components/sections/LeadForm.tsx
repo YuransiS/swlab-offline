@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { User, Phone, Check, X } from "lucide-react";
+import { User, Phone, Check, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function LeadForm() {
@@ -33,12 +33,23 @@ export function LeadForm() {
     };
   }, [isOpen, success]);
 
+  const TELEGRAM_URL = "https://t.me/swlab_education_bot?start=69c0d8801ebc2a4a840b4da6";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       setSuccess(true);
+      
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Lead');
+      }
+
+      setTimeout(() => {
+        window.location.href = TELEGRAM_URL;
+      }, 1500);
+      
     }, 1500);
   };
 
@@ -122,13 +133,24 @@ export function LeadForm() {
                <motion.div 
                  initial={{ opacity: 0, scale: 0.9 }} 
                  animate={{ opacity: 1, scale: 1 }}
-                 className="text-center py-6"
+                 className="text-center py-6 flex flex-col items-center"
                >
-                 <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-5">
-                   <Check size={32} />
+                 <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-5">
+                   <Loader2 className="animate-spin" size={32} />
                  </div>
-                 <h3 className="text-2xl font-extrabold text-[var(--color-heading)] mb-2">Заявка принята</h3>
-                 <p className="text-[#475569] text-base">Мы свяжемся с вами в ближайшее время для подтверждения участия.</p>
+                 <h3 className="text-2xl font-extrabold text-[var(--color-heading)] mb-2">Перенаправление...</h3>
+                 <p className="text-[#475569] text-base mb-6">
+                   Сейчас вы будете автоматически перенаправлены в Telegram для завершения регистрации.
+                 </p>
+                 <p className="text-[#475569] text-sm mb-4">
+                   Пожалуйста, нажмите на кнопку ниже, если автоматический переход не сработал:
+                 </p>
+                 <Button
+                   onClick={() => window.location.href = TELEGRAM_URL}
+                   className="w-full text-base py-4 rounded-xl"
+                 >
+                   ПЕРЕЙТИ В ТЕЛЕГРАМ
+                 </Button>
                </motion.div>
             )}
           </motion.div>
